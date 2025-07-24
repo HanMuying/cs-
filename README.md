@@ -1,5 +1,4 @@
 #cs任务管理系统
-<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
