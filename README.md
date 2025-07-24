@@ -1,2 +1,251 @@
-# cs-
-cs管理系统
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务管理系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3b82f6',
+            secondary: '#64748b',
+            success: '#10b981',
+            danger: '#ef4444',
+            warning: '#f59e0b',
+            info: '#06b6d4',
+            light: '#f8fafc',
+            dark: '#1e293b',
+          },
+          fontFamily: {
+            inter: ['Inter', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .transition-all-300 {
+        transition: all 300ms ease-in-out;
+      }
+      .shadow-hover {
+        transition: box-shadow 0.3s ease;
+      }
+      .shadow-hover:hover {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-inter">
+  <div id="app" class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- 顶部导航 -->
+    <header class="mb-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between mb-4">
+        <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-gray-800">
+          <i class="fa fa-tasks text-primary mr-2"></i>任务管理系统
+        </h1>
+        <div class="mt-4 md:mt-0">
+          <span class="text-gray-600 text-sm" id="current-date"></span>
+          <button id="export-btn" class="ml-4 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md shadow transition-all-300 flex items-center">
+            <i class="fa fa-download mr-2"></i>导出数据
+          </button>
+        </div>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1">搜索任务</label>
+            <div class="relative">
+              <input type="text" id="search-input" placeholder="输入关键词搜索..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300">
+              <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+          </div>
+          <div class="flex items-end">
+            <button id="add-task-btn" class="w-full md:w-auto bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-md shadow transition-all-300 flex items-center justify-center">
+              <i class="fa fa-plus-circle mr-2"></i>添加任务
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 统计卡片 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 shadow-hover">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-500">总任务数</p>
+            <p class="text-3xl font-bold text-gray-800 mt-1" id="total-tasks">0</p>
+          </div>
+          <div class="bg-blue-100 p-3 rounded-full">
+            <i class="fa fa-list text-primary text-xl"></i>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 shadow-hover">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-500">已完成</p>
+            <p class="text-3xl font-bold text-success mt-1" id="completed-tasks">0</p>
+          </div>
+          <div class="bg-green-100 p-3 rounded-full">
+            <i class="fa fa-check-circle text-success text-xl"></i>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 shadow-hover">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-500">未完成</p>
+            <p class="text-3xl font-bold text-danger mt-1" id="incomplete-tasks">0</p>
+          </div>
+          <div class="bg-red-100 p-3 rounded-full">
+            <i class="fa fa-times-circle text-danger text-xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 任务列表 -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
+      <div class="p-4 border-b border-gray-200 bg-gray-50">
+        <h2 class="text-lg font-semibold text-gray-800">任务列表</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">序号</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">咸鱼</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">微信</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">执行次数</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">本周是否完成</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">备注</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200" id="task-table-body">
+            <!-- 任务行将通过JavaScript动态生成 -->
+            <tr class="text-center">
+              <td colspan="7" class="px-6 py-12 text-gray-500">
+                <div class="flex flex-col items-center">
+                  <i class="fa fa-folder-open-o text-5xl text-gray-300 mb-4"></i>
+                  <p>暂无任务，请点击"添加任务"按钮创建新任务</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center" id="pagination-container">
+        <div class="text-sm text-gray-600">
+          显示 <span id="showing-start">0</span>-<span id="showing-end">0</span> 条，共 <span id="total-count">0</span> 条
+        </div>
+        <div class="flex space-x-1">
+          <button id="prev-page" class="px-3 py-1 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all-300">
+            <i class="fa fa-chevron-left"></i>
+          </button>
+          <div id="pagination-numbers" class="flex">
+            <!-- 页码将通过JavaScript动态生成 -->
+          </div>
+          <button id="next-page" class="px-3 py-1 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all-300">
+            <i class="fa fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加/编辑任务模态框 -->
+    <div id="task-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold text-gray-800" id="modal-title">添加任务</h3>
+            <button id="close-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
+              <i class="fa fa-times text-xl"></i>
+            </button>
+          </div>
+          <form id="task-form">
+            <div class="mb-4">
+              <label for="xianyu" class="block text-sm font-medium text-gray-700 mb-1">咸鱼</label>
+              <input type="text" id="xianyu" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300" placeholder="请输入咸鱼账号">
+            </div>
+            <div class="mb-4">
+              <label for="wechat" class="block text-sm font-medium text-gray-700 mb-1">微信</label>
+              <input type="text" id="wechat" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300" placeholder="请输入微信账号">
+            </div>
+            <div class="mb-4">
+              <label for="count" class="block text-sm font-medium text-gray-700 mb-1">执行次数</label>
+              <div class="flex items-center">
+                <button type="button" id="decrease-count" class="px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <i class="fa fa-minus"></i>
+                </button>
+                <input type="number" id="count" min="0" value="0" class="w-full px-4 py-2 border-y border-gray-300 text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300">
+                <button type="button" id="increase-count" class="px-3 py-2 border border-gray-300 rounded-r-md bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <i class="fa fa-plus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="mb-4">
+              <label for="done" class="block text-sm font-medium text-gray-700 mb-1">本周是否完成</label>
+              <select id="done" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300">
+                <option value="是">是</option>
+                <option value="否">否</option>
+              </select>
+            </div>
+            <div class="mb-4">
+              <label for="remark" class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+              <textarea id="remark" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300" placeholder="请输入备注信息"></textarea>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+              <button type="button" id="cancel-task" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">取消</button>
+              <button type="submit" class="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-md shadow transition-all-300">保存</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 确认删除模态框 -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="confirm-content">
+        <div class="p-6">
+          <div class="text-center mb-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+              <i class="fa fa-exclamation-triangle text-danger text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800">确认删除</h3>
+            <p class="text-gray-600 mt-2">你确定要删除这个任务吗？此操作不可撤销。</p>
+          </div>
+          <div class="flex justify-center space-x-3 mt-6">
+            <button id="cancel-delete" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">取消</button>
+            <button id="confirm-delete" class="px-6 py-2 bg-danger hover:bg-danger/90 text-white rounded-md shadow transition-all-300">确认删除</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div id="toast" class="fixed top-4 right-4 max-w-xs w-full bg-white rounded-lg shadow-lg border border-gray-200 p-4 transform translate-x-full transition-transform duration-300 ease-in-out z-50 flex items-center">
+      <div id="toast-icon" class="mr-3 text-lg"></div>
+      <div class="flex-1">
+        <p id="toast-message" class="text-sm font-medium"></p>
+      </div>
+      <button id="close-toast" class="ml-2 text-gray-400 hover:text-gray-600">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>    
